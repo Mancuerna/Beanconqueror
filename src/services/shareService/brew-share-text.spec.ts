@@ -3,6 +3,7 @@ import { Brew } from '../../classes/brew/brew';
 import { Mill } from '../../classes/mill/mill';
 import { ShareBrewTextFields } from '../../classes/parameter/shareBrewTextFields';
 import { Preparation } from '../../classes/preparation/preparation';
+import { PREPARATION_STYLE_TYPE } from '../../enums/preparations/preparationStyleTypes';
 import { formatBrewShareText } from './brew-share-text';
 
 describe('formatBrewShareText', () => {
@@ -41,11 +42,12 @@ describe('formatBrewShareText', () => {
 
     expect(text).toContain('Nombre: House blend');
     expect(text).toContain(
-      '1. País: Etiopía · Variedad: Heirloom · Proceso: Natural',
+      '1. País: Etiopía\n1. Variedad: Heirloom\n1. Proceso: Natural',
     );
     expect(text).toContain(
-      '2. País: Colombia · Variedad: Caturra · Proceso: Lavado',
+      '2. País: Colombia\n2. Variedad: Caturra\n2. Proceso: Lavado',
     );
+    expect(text).toContain('2. Proceso: Lavado\n- - - - - - -\nMétodo: V60');
     expect(text).toContain('Método: V60');
     expect(text).toContain('Café molido: 18 g');
   });
@@ -119,5 +121,75 @@ describe('formatBrewShareText', () => {
 
     expect(text).toContain('País: Kenya');
     expect(text).not.toContain('2. País: Kenya');
+  });
+
+  it('shares TDS and EY independently when the calculation has enough data', () => {
+    const brew = new Brew();
+    brew.tds = 1.25;
+    brew.grind_weight = 20;
+    brew.brew_beverage_quantity = 300;
+    const fields = new ShareBrewTextFields();
+    spyOn(brew, 'getPreparation').and.returnValue(new Preparation());
+
+    const text = formatBrewShareText(
+      brew,
+      new Bean(),
+      new Preparation(),
+      new Mill(),
+      fields,
+      translate,
+      'es',
+    );
+
+    expect(text).toContain('TDS: 1,25 %');
+    expect(text).toContain('EY: 18,75 %');
+    fields.extraction_yield = false;
+    expect(
+      formatBrewShareText(
+        brew,
+        new Bean(),
+        new Preparation(),
+        new Mill(),
+        fields,
+        translate,
+        'es',
+      ),
+    ).not.toContain('EY:');
+  });
+
+  it('uses water quantity for immersion EY and omits EY without a dose', () => {
+    const brew = new Brew();
+    brew.tds = 1.2;
+    brew.grind_weight = 20;
+    brew.brew_quantity = 300;
+    brew.brew_beverage_quantity = 200;
+    const preparation = new Preparation();
+    preparation.style_type = PREPARATION_STYLE_TYPE.FULL_IMMERSION;
+    spyOn(brew, 'getPreparation').and.returnValue(preparation);
+
+    const text = formatBrewShareText(
+      brew,
+      new Bean(),
+      preparation,
+      new Mill(),
+      new ShareBrewTextFields(),
+      translate,
+      'en',
+    );
+    expect(text).toContain('EY: 18 %');
+
+    brew.grind_weight = 0;
+    const withoutDose = formatBrewShareText(
+      brew,
+      new Bean(),
+      preparation,
+      new Mill(),
+      new ShareBrewTextFields(),
+      translate,
+      'en',
+    );
+    expect(withoutDose).toContain('TDS: 1.2 %');
+    expect(withoutDose).not.toContain('EY:');
+    expect(withoutDose).not.toContain('- - - - - - -');
   });
 });

@@ -13,8 +13,6 @@ import {
   IonMenuButton,
   NavController,
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { shareSocialOutline } from 'ionicons/icons';
 
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -42,10 +40,6 @@ import { HeaderComponent } from '../../components/header/header.component';
 export class BrewParameterPage implements OnInit {
   navCtrl = inject(NavController);
   private readonly router = inject(Router);
-
-  constructor() {
-    addIcons({ shareSocialOutline });
-  }
 
   public ngOnInit() {}
 

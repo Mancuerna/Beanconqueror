@@ -67,6 +67,8 @@ export class ShareTextParameterComponent {
     },
     { key: 'brew_temperature', label: 'BREW_DATA_BREW_TEMPERATURE' },
     { key: 'brew_time', label: 'BREW_DATA_TIME' },
+    { key: 'tds', label: 'TDS' },
+    { key: 'extraction_yield', label: 'EY' },
     { key: 'rating', label: 'BREW_DATA_RATING' },
     { key: 'note', label: 'BREW_DATA_NOTES' },
   ];

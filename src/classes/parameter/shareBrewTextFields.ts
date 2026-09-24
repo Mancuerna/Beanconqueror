@@ -15,6 +15,8 @@ export class ShareBrewTextFields {
   public brew_beverage_quantity = true;
   public brew_temperature = true;
   public brew_time = true;
+  public tds = true;
+  public extraction_yield = true;
   public rating = false;
   public note = false;
 }

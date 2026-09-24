@@ -15,14 +15,20 @@ export function formatBrewShareText(
   translate: (key: string) => string,
   language: string,
 ): string {
-  const lines: string[] = [];
+  const beanLines: string[] = [];
+  const brewLines: string[] = [];
   const formatNumber = new Intl.NumberFormat(
     (language || 'en').replace('_', '-'),
     {
       maximumFractionDigits: 2,
     },
   );
-  const add = (enabled: boolean, label: string, value: string | number) => {
+  const add = (
+    lines: string[],
+    enabled: boolean,
+    label: string,
+    value: string | number,
+  ) => {
     if (
       enabled &&
       value !== undefined &&
@@ -35,8 +41,8 @@ export function formatBrewShareText(
   const numberWithUnit = (value: number, unit: string): string =>
     value > 0 ? `${formatNumber.format(value)} ${unit}` : '';
 
-  add(fields.bean_name, 'BEAN_DATA_NAME', bean?.name);
-  add(fields.bean_roaster, 'BEAN_DATA_ROASTER', bean?.roaster);
+  add(beanLines, fields.bean_name, 'BEAN_DATA_NAME', bean?.name);
+  add(beanLines, fields.bean_roaster, 'BEAN_DATA_ROASTER', bean?.roaster);
 
   const originFields = [
     {
@@ -57,33 +63,37 @@ export function formatBrewShareText(
     },
   ] as const;
   const origins = bean?.bean_information ?? [];
-  const originLines = origins
+  const originGroups = origins
     .map((origin) =>
       originFields
         .filter(({ enabled, field }) => enabled && origin?.[field]?.trim())
-        .map(({ key, field }) => `${translate(key)}: ${origin[field]}`)
-        .join(' · '),
+        .map(({ key, field }) => `${translate(key)}: ${origin[field]}`),
     )
-    .filter(Boolean);
-  originLines.forEach((originLine, index) => {
-    lines.push(
-      `${originLines.length > 1 ? `${index + 1}. ` : ''}${originLine}`,
-    );
+    .filter((details) => details.length);
+  originGroups.forEach((details, index) => {
+    details.forEach((detail) => {
+      beanLines.push(
+        `${originGroups.length > 1 ? `${index + 1}. ` : ''}${detail}`,
+      );
+    });
   });
 
   add(
+    brewLines,
     fields.method_of_preparation,
     'BREW_DATA_PREPARATION_METHOD',
     preparation?.name,
   );
-  add(fields.mill, 'BREW_DATA_MILL', mill?.name);
-  add(fields.grind_size, 'BREW_DATA_GRIND_SIZE', brew.grind_size);
+  add(brewLines, fields.mill, 'BREW_DATA_MILL', mill?.name);
+  add(brewLines, fields.grind_size, 'BREW_DATA_GRIND_SIZE', brew.grind_size);
   add(
+    brewLines,
     fields.grind_weight,
     'BREW_DATA_GRIND_WEIGHT',
     numberWithUnit(brew.grind_weight, 'g'),
   );
   add(
+    brewLines,
     fields.brew_quantity,
     'BREW_DATA_BREW_QUANTITY',
     numberWithUnit(
@@ -92,6 +102,7 @@ export function formatBrewShareText(
     ),
   );
   add(
+    brewLines,
     fields.brew_beverage_quantity,
     'BREW_DATA_BREW_BEVERAGE_QUANTITY',
     numberWithUnit(
@@ -100,21 +111,42 @@ export function formatBrewShareText(
     ),
   );
   add(
+    brewLines,
     fields.brew_temperature,
     'BREW_DATA_BREW_TEMPERATURE',
     numberWithUnit(brew.brew_temperature, '°C'),
   );
   add(
+    brewLines,
     fields.brew_time,
     'BREW_DATA_TIME',
     brew.brew_time > 0 ? brew.getFormattedTotalCoffeeBrewTime() : '',
   );
   add(
+    brewLines,
+    fields.tds,
+    'TDS',
+    brew.tds > 0 ? `${formatNumber.format(brew.tds)} %` : '',
+  );
+  const extractionYield =
+    fields.extraction_yield && brew.tds > 0 && brew.grind_weight > 0
+      ? Number(brew.getExtractionYield())
+      : 0;
+  add(
+    brewLines,
+    fields.extraction_yield,
+    'EY',
+    extractionYield > 0 ? `${formatNumber.format(extractionYield)} %` : '',
+  );
+  add(
+    brewLines,
     fields.rating,
     'BREW_DATA_RATING',
     brew.rating > 0 ? formatNumber.format(brew.rating) : '',
   );
-  add(fields.note, 'BREW_DATA_NOTES', brew.note);
+  add(brewLines, fields.note, 'BREW_DATA_NOTES', brew.note);
 
-  return lines.join('\n');
+  const separator =
+    beanLines.length && brewLines.length ? ['- - - - - - -'] : [];
+  return [...beanLines, ...separator, ...brewLines].join('\n');
 }

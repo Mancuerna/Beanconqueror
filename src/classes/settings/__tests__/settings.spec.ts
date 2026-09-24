@@ -32,6 +32,12 @@ describe('Settings', () => {
     restored.initializeByObject(saved);
     expect(restored.share_brew_text_fields.bean_country).toBeFalse();
 
+    Reflect.deleteProperty(saved.share_brew_text_fields, 'tds');
+    Reflect.deleteProperty(saved.share_brew_text_fields, 'extraction_yield');
+    restored.initializeByObject(saved);
+    expect(restored.share_brew_text_fields.tds).toBeTrue();
+    expect(restored.share_brew_text_fields.extraction_yield).toBeTrue();
+
     Reflect.deleteProperty(saved, 'share_brew_text_fields');
     restored.initializeByObject(saved);
     expect(restored.share_brew_text_fields.bean_country).toBeTrue();
