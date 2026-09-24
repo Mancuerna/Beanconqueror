@@ -13,6 +13,8 @@ import {
   IonMenuButton,
   NavController,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { shareSocialOutline } from 'ionicons/icons';
 
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -41,6 +43,10 @@ export class BrewParameterPage implements OnInit {
   navCtrl = inject(NavController);
   private readonly router = inject(Router);
 
+  constructor() {
+    addIcons({ shareSocialOutline });
+  }
+
   public ngOnInit() {}
 
   public openManageParameters(): void {
@@ -60,6 +66,10 @@ export class BrewParameterPage implements OnInit {
 
   public openListViewParameters(): void {
     this.router.navigateByUrl('/brew-parameter/listview');
+  }
+
+  public openShareTextParameters(): void {
+    void this.router.navigateByUrl('/brew-parameter/share-text');
   }
 }
 
